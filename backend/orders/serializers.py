@@ -1,25 +1,37 @@
 from rest_framework import serializers
-from .models import Order, OrderItem
+from .models import Order, Cart , CartItem
 from products.models import Product
 
-class OrderItemSerializer(serializers.ModelSerializer):
+
+class CartItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source= 'product.name', read_only=True)
+    product_price = serializers.DecimalField(source= 'product.price', read_only= True)
+
     class Meta:
-        model = OrderItem
-        fields = ['product', 'quantity']
+        model = CartItem
+        fields = ['id', 'cart', 'product', 'quantity', 'product_name', 'product_price']
+
+
+
+
+class CartSerializer(serializers.ModelSerializer):
+    items = CartItemSerializer(many= True, read_only=True)
+    total_items = serializers.IntegerField(source = 'total_items', read_only = True)
+    total_price = serializers.DecimalField(source= 'total_price', read_only= True)
+
+    class Meta:
+        model = Cart
+        fields = ['id', 'user', 'created_at', 'updated_at', 'items', 'total_items', 'total_price']
+
+
 
 class OrderSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(many=True)
+    cart = CartSerializer(read_only = True)
+    user = serializers.StringRelatedField(read_only = True)
 
-    class Meta:
+
+    class Meta: 
         model = Order
-        fields = ['id', 'user', 'items', 'created_at', 'is_paid', 'is_shipped']
+        fields =  ['user', 'cart', 'total_amount', 'status', 'created_at', 'updated_at', 'payment_proof']
 
-    def create(self, validated_data):
-        items_data = validated_data.pop('items')
-        user = self.context['request'].user
-        order = Order.objects.create(user=user, **validated_data)
 
-        for item_data in items_data:
-            OrderItem.objects.create(order=order, **item_data)
-
-        return order

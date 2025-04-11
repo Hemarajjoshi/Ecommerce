@@ -33,7 +33,7 @@ class Cart(models.Model):
 
     
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['created_at']
 
 
 class CartItem(models.Model):
@@ -42,6 +42,10 @@ class CartItem(models.Model):
     quantity = models.PositiveIntegerField(default =1)
     created_at = models.DateTimeField(auto_now_add = True)
     updated_at = models.DateTimeField(auto_now_add = True)
+
+
+    class Meta:
+        unique_together = ['cart', 'product']
 
 
 
